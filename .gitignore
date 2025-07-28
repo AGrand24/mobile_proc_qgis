@@ -7,3 +7,4 @@
 /py_mob/__pycache__
 *.qgz
 *.ipynb
+*.gpkg
