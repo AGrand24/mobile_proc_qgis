@@ -1,0 +1,10 @@
+*.csv
+/tmp
+/vector
+/__pycache__
+/out
+/old
+/output
+/py_mob/__pycache__
+*.qgz
+*.ipynb
