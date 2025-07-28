@@ -27,9 +27,7 @@ def kriging(meas):
     grid_x = np.linspace(x0, x100, cells_x)
     grid_y = np.linspace(y0, y100, cells_y)
 
-    ok = OrdinaryKriging(
-        x, y, z, variogram_model="linear", verbose=False, enable_plotting=False
-    )
+    ok = OrdinaryKriging(x, y, z, variogram_model="exponential", exact_values=True)
 
     grid_z, ss = ok.execute("grid", grid_x, grid_y)
     grid_z = np.round(grid_z, 3)
@@ -46,18 +44,13 @@ def mask_grid(meas):
     grid_z = meas.grid_z_full
 
     polygon = meas.extents
-    coords = list(zip(grid_x.flatten(), grid_y.flatten()))
-    coords = [Point(c) for c in coords]
     z_flat = grid_z.flatten()
 
-    mask = []
-    for points in coords:
-        mask.append(polygon.contains(points))
-
-    for i, m in enumerate(mask):
-        if m[0] == False:
-            z_flat[i] = np.nan
-
+    points = gpd.GeoSeries(gpd.points_from_xy(grid_x.flatten(), grid_y.flatten()))
+    polygon = meas.extents["geometry"].iloc[0]
+    mask = polygon.contains(points)
+    mask = np.where(mask == False)
+    z_flat[mask] = np.nan
     grid_z_masked = z_flat.reshape(grid_z.shape)
     return grid_z_masked
 

@@ -1,7 +1,4 @@
 -short line heading errors:
 	-003/2025-07-14_12h31m/003_2025-07-14_12h31m.html,
 
--griding failue:
-	-002/2025-07-08_10h44m/002_2025-07-08_10h44m.html
-
 -add low count ID_point to histogram

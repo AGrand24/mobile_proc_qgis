@@ -401,9 +401,9 @@ class Meas:
 
         return self
 
-    def Export_html(self):
+    def Export_html(self, width=1600, height=900):
         fig = fig_traces(self)
-        fig = fig_format(fig)
+        fig = fig_format(fig, width, height)
         fig.write_html(self.fp["html"])
         self.fig = fig
         return self

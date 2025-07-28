@@ -228,7 +228,7 @@ def fig_traces(meas):
     return fig
 
 
-def fig_format(fig):
+def fig_format(fig, width, height):
 
     fig.update_yaxes(scaleanchor="x2", scaleratio=1, row=1, col=2)
     fig.update_layout(
@@ -240,7 +240,7 @@ def fig_format(fig):
         yaxis3=(dict(domain=[0.55, 0.7])),
     )
 
-    fig.update_layout(width=1600, height=900)
+    fig.update_layout(width=width, height=height)
     fig.update_layout(legend=dict(yanchor="bottom", xanchor="right", y=0.01, x=0.25))
 
     fig.update_layout(showlegend=True, hoverdistance=1)
