@@ -39,6 +39,7 @@ def get_heatmap(meas):
         zmax=zmax,
         colorscale="RdBu_r",
         colorbar=colorbar,
+        showlegend=True,
     )
     return plt
 
@@ -59,21 +60,23 @@ def get_scatter_data(meas):
     cd = cd.values
     df = get_k_clr(df)
     marker = dict(
-        symbol="arrow",
+        symbol="triangle-up",
         angle=df["compass"],
         color=df["clr"],
-        size=10,
+        size=9,
         line=dict(color="#000000", width=1),
     )
+    line = dict(color="#000000", width=1)
     ht = "Point: %{customdata[0]}<br>Time:  %{customdata[1]}<br>Compass: %{customdata[2]}<br>V raw: %{customdata[3]}<br>V norm: %{customdata[4]}<br>V k: %{customdata[5]}<br>Line: %{customdata[6]}"
     plt = go.Scatter(
         x=df["lon"],
         y=df["lat"],
-        mode="markers",
+        mode="lines+markers",
         marker=marker,
         name="Points",
         customdata=cd,
         hovertemplate=ht,
+        line=line,
     )
     return plt
 
@@ -206,14 +209,14 @@ def fig_traces(meas):
         plt_hist = get_histogram(meas)
         fig.add_trace(plt_hist, row=1, col=1)
 
+        plt_data = get_scatter_data(meas)
+        fig.add_trace(plt_data, row=1, col=2)
+
         plt_values_norm = get_scatter_values(meas, "norm")
         fig.add_trace(plt_values_norm, row=1, col=2)
 
         plt_values_raw = get_scatter_values(meas, "raw")
         fig.add_trace(plt_values_raw, row=1, col=2)
-
-        plt_data = get_scatter_data(meas)
-        fig.add_trace(plt_data, row=1, col=2)
 
         plt_txt = get_pt_txt(meas)
         fig.add_trace(plt_txt, row=1, col=2)
