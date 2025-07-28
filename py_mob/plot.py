@@ -98,9 +98,9 @@ def get_scatter_values(meas, values):
     ]
     cd = cd.values
     marker = dict(
-        symbol="square",
+        symbol="circle",
         color=df[clr],
-        size=15,
+        size=10,
         line=dict(color="#000000", width=1),
     )
     ht = "Point: %{customdata[0]}<br>Time:  %{customdata[1]}<br>Compass: %{customdata[2]}<br>V raw: %{customdata[3]}<br>V norm: %{customdata[4]}<br>V k: %{customdata[5]}<br>Line: %{customdata[6]}"
