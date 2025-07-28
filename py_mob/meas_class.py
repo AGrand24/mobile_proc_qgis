@@ -260,8 +260,6 @@ class Meas:
         return self
 
     def Get_colors(self):
-        # colorscale = "Portland"
-        # colorscale = "Balance"
         colorscale = "RdBu_r"
         for voltage, type in zip(["voltage_raw", "voltage_norm"], ["r", "n"]):
 
@@ -275,7 +273,6 @@ class Meas:
             mask = self.data[voltage].isnull()
             self.data.loc[mask, [f"clr_{type}_rgb"]] = "rgb(255, 0, 255)"
 
-            # clr_hex = self.data[f"clr_{type}_rgb"].str.replace("rgb(|","")
             clr_hex = [rgb_to_hex(c) for c in clr_rgb]
 
             self.data[f"clr_{type}_hex"] = clr_hex
@@ -387,7 +384,7 @@ class Meas:
         if len(self.Filter_data("meas").dropna(subset="voltage_norm")) > 0:
             self.grid_x, self.grid_y, self.grid_z_full = kriging(self)
             self.grid_z = mask_grid(self)
-            if kwargs.get("wgs", False) == True:
+            if kwargs.get("wgs", True) == True:
                 self.Convert_grid_coordinates()
             if pd.Series(self.grid_z.flatten()).dropna().count() > 0:
                 export_surfer_grid(

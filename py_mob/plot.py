@@ -44,7 +44,7 @@ def get_heatmap(meas):
     return plt
 
 
-def get_scatter_data(meas):
+def get_scatter_compass(meas):
     df = meas.Filter_data("meas")
     cd = df[
         [
@@ -73,7 +73,7 @@ def get_scatter_data(meas):
         y=df["lat"],
         mode="lines+markers",
         marker=marker,
-        name="Points",
+        name="Compass",
         customdata=cd,
         hovertemplate=ht,
         line=line,
@@ -209,8 +209,8 @@ def fig_traces(meas):
         plt_hist = get_histogram(meas)
         fig.add_trace(plt_hist, row=1, col=1)
 
-        plt_data = get_scatter_data(meas)
-        fig.add_trace(plt_data, row=1, col=2)
+        plt_compass = get_scatter_compass(meas)
+        fig.add_trace(plt_compass, row=1, col=2)
 
         plt_values_norm = get_scatter_values(meas, "norm")
         fig.add_trace(plt_values_norm, row=1, col=2)

@@ -28,7 +28,7 @@ def install_requirements(requirements_path="requirements.txt"):
         )
 
         print("\nSuccessfully installed all packages from requirements.txt.")
-
+        input("Pres ENTER to exit!")
     except subprocess.CalledProcessError as e:
         print(
             f"\nAn error occurred while installing packages. Pip returned a non-zero exit code."
