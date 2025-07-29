@@ -1,22 +1,31 @@
-import pandas as pd
 import os
+import pandas as pd
+from pathlib import Path
 
 
 def get_ld(dir_path, **kwargs):
-    file_list = []
-    for root, dirs, files in os.walk(dir_path):
+    df = pd.DataFrame(columns=["fp", "fn", "f", "ext"])
+    file_path = []
+    for root, dir, files in os.walk(dir_path):
         for file in files:
-            file_path = os.path.join(root, file)
-            file_list.append({"fn": file, "fp": file_path})
+            file_path.append(os.path.join(root, file))
 
-    df = pd.DataFrame(file_list)
+    fn = []
+    f = []
+    ext = []
+    fp_abs = []
 
-    if len(df) > 0:
-        if kwargs.get("ext", None) != None:
-            df = df.loc[df["fn"].str.endswith(kwargs.get("ext", None))]
+    for fp in file_path:
+        fn.append(Path(fp).name)
+        f.append(Path(fp).stem)
+        ext.append(Path(fp).suffix)
+        fp_abs.append(Path(fp).absolute())
 
-        df["ext"] = df["fn"].str.findall("[^.]*$")
-        df["ext"] = [l[0] for l in df["ext"]]
-        df["f"] = df["fn"].str.findall("^[^.]*")
-        df["f"] = [l[0] for l in df["f"]]
+    data = {"fp": fp, "fn": fn, "f": f, "ext": ext, "fp_abs": fp_abs}
+    df = pd.concat([df, pd.DataFrame(data)], axis=0)
+    df = df.astype(str)
+
+    if kwargs.get("ext", None) != None:
+        df = df.loc[df["fn"].str.endswith(kwargs.get("ext", None))]
+
     return df.reset_index(drop=True)
