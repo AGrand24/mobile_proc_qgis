@@ -154,6 +154,7 @@ def get_scatter_input(meas):
         name="Input",
         customdata=cd,
         hovertemplate=ht,
+        visible="legendonly",
     )
     return plt
 
@@ -230,7 +231,18 @@ def fig_traces(meas):
 
 def fig_format(fig, width, height):
 
+    # 1,1
+    fig.update_xaxes(row=1, col=1, showgrid=True)
+    fig.update_xaxes(row=1, col=1, title="voltage norm")
+    fig.update_yaxes(row=1, col=1, title="n")
+    # 1,2
     fig.update_yaxes(scaleanchor="x2", scaleratio=1, row=1, col=2)
+    fig.update_xaxes(row=1, col=2, showticklabels=False, showgrid=False)
+    fig.update_yaxes(row=1, col=2, showticklabels=False, showgrid=False)
+    # 2,1
+    fig.update_yaxes(row=2, col=1, title="voltage k")
+    fig.update_xaxes(row=2, col=1, title="compass (deg)")
+
     fig.update_layout(
         xaxis1=(dict(domain=[0, 0.25])),
         xaxis2=(dict(domain=[0.25, 0.95])),
@@ -245,12 +257,6 @@ def fig_format(fig, width, height):
 
     fig.update_layout(showlegend=True, hoverdistance=1)
     fig.update_layout(margin=dict(l=1, r=1, t=1, b=2))
-    fig.update_xaxes(row=1, col=2, showticklabels=False, showgrid=False)
-    fig.update_yaxes(row=1, col=2, showticklabels=False, showgrid=False)
-    fig.update_xaxes(row=1, col=1, showgrid=True)
-    fig.update_xaxes(row=1, col=1, title="voltage norm")
-    fig.update_yaxes(row=1, col=1, title="n")
-    fig.update_yaxes(row=2, col=1, title="voltage k")
-    fig.update_xaxes(row=2, col=1, title="compass (deg)")
+    # fig.update_layout(dragmode="pan")
 
     return fig

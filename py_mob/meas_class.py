@@ -11,7 +11,7 @@ from plotly.colors import sample_colorscale
 from .angles import angle_full, angle_360, angle_points, angle_signed, angle_dx_dy
 from .proc import calc_compass
 
-from .line import get_line_data, get_pt_hdg, split_lines, get_lines
+from .line import get_line_data, get_pt_hdg, split_lines, get_lines, calc_line_pos
 
 from .colors import rgb_to_hex, get_default_crange
 from .sensors import sensors_load_from_db
@@ -52,6 +52,7 @@ class Meas:
         self.Get_crange()
         self.Get_colors()
         self.data = self.data.sort_index(axis=1)
+        # self.Get_line_pos()
         return self
 
     def Export(self):
@@ -441,3 +442,13 @@ class Meas:
 
         with open(self.fp["bln"], "w") as file:
             file.writelines(lines)
+
+    def Get_line_pos(self):
+        if len(self.Filter_data("meas")) > 0:
+            linepos = calc_line_pos(self.data)
+            data = {"line_pts": linepos[2], "line_pts_norm": linepos[3]}
+            df = pd.DataFrame(data=data, index=linepos[0])
+            self.data = pd.merge(
+                self.data, df, how="left", left_on="ID", right_index=True
+            )
+        return self

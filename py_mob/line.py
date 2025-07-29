@@ -2,7 +2,7 @@ import numpy as np
 from shapely import LineString
 import geopandas as gpd
 import pandas as pd
-from .angles import angle_360
+from .angles import angle_360, angle_signed
 
 
 def get_lines(df):
@@ -47,15 +47,18 @@ def split_lines(df):
 
 
 def get_line_data(df, df_path):
-    df["cos"] = np.cos(np.deg2rad(df["hdg_fwd"]))
-    df["sin"] = np.sin(np.deg2rad(df["hdg_fwd"]))
+    for col in ["hdg_fwd", "compass"]:
 
-    line_data = df.groupby("ID_line")[["cos", "sin", "compass"]].agg("median")
-    line_data["hdg_fwd"] = np.rad2deg(np.atan2(line_data["sin"], line_data["cos"]))
-    line_data["hdg_fwd"] = angle_360(line_data["hdg_fwd"])
+        df["cos"] = np.cos(np.deg2rad(df[col]))
+        df["sin"] = np.sin(np.deg2rad(df[col]))
+        line_data = df.groupby("ID_line")[["cos", "sin"]].agg("median")
+        line_data[col] = np.rad2deg(np.atan2(line_data["sin"], line_data["cos"]))
+        line_data[col] = angle_360(line_data[col])
+        line_data = line_data.add_prefix("line_")
+        line_data = line_data[[f"line_{col}"]]
+        df = pd.merge(df, line_data, how="left", left_on="ID_line", right_index=True)
 
-    line_data = line_data[["hdg_fwd", "compass"]].add_prefix("line_")
-    df = pd.merge(df, line_data, how="left", left_on="ID_line", right_index=True)
+    df["line_hdg_diff"] = np.abs(angle_signed(df["line_hdg_fwd"] - df["line_compass"]))
 
     df_path["line_len"] = [np.round(g.length, 2) for g in df_path["geometry"]]
     df = pd.merge(
@@ -118,3 +121,26 @@ def get_pt_hdg(df):
     df["d_dst"] = np.min(df[["dst_fwd", "dst_bck"]], axis=1)
 
     return df
+
+
+def calc_line_pos(df):
+    df = df.dropna(subset="ID_line")
+    index = df["ID"]
+    line_pos = np.array([])
+    line_pts = np.array([])
+
+    for line in df["ID_line"].unique():
+        df_line = df.loc[df["ID_line"] == line]
+        n = len(df_line)
+        tmp = np.arange(0, n, 1)
+        tmp = tmp / np.max(tmp)
+        line_pos = np.append(line_pos, tmp)
+
+        tmp = np.tile(n, n)
+        line_pts = np.append(line_pts, tmp)
+
+    line_pos[np.isnan(line_pos) == True] = 0
+    line_pts_norm = line_pts / np.quantile(line_pts, 0.25)
+    line_pts_norm = np.clip(line_pts_norm, 0, 1)
+
+    return index, line_pos, line_pts, line_pts_norm
