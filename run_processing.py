@@ -9,7 +9,7 @@ except Exception as error:
     traceback.print_exc()
     input("Press ENTER to continue!")
 
-ld = get_ld("raw", ext="csv")
+ld = get_ld("raw", ext=".csv")
 
 meas = []
 n = len(ld)
