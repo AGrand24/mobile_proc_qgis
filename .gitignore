@@ -8,3 +8,4 @@
 *.qgz
 *.ipynb
 *.gpkg
+/qfield_pak

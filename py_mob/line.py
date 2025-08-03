@@ -28,7 +28,7 @@ def get_lines(df):
     return df
 
 
-def split_lines(df):
+def split_lines(df, crs):
 
     gb = df.groupby("ID_line", as_index=False)[["x", "y"]].agg(list)
 
@@ -41,7 +41,7 @@ def split_lines(df):
     gdf = gpd.GeoDataFrame(
         data={"ID_line": gb["ID_line"]},
         geometry=geom,
-        crs=3857,
+        crs=crs,
     )
     return gdf
 

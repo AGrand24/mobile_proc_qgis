@@ -3,7 +3,7 @@ import geopandas as gpd
 import os
 
 
-def export_gdf(meas, overwrite):
+def export_gdf(meas, overwrite, crs):
 
     if overwrite == "full":
         keep = "last"
@@ -16,12 +16,12 @@ def export_gdf(meas, overwrite):
     current = pd.DataFrame()
 
     for m in meas:
-        data = pd.concat([data, m.data.set_crs(3857)], axis=0).reset_index(drop=True)
-        extents = pd.concat([extents, m.extents.set_crs(3857)], axis=0).reset_index(
+        data = pd.concat([data, m.data.set_crs(crs)], axis=0).reset_index(drop=True)
+        extents = pd.concat([extents, m.extents.set_crs(crs)], axis=0).reset_index(
             drop=True
         )
-        path = pd.concat([path, m.path.set_crs(3857)], axis=0).reset_index(drop=True)
-        current = pd.concat([current, m.current.set_crs(3857)], axis=0).reset_index(
+        path = pd.concat([path, m.path.set_crs(crs)], axis=0).reset_index(drop=True)
+        current = pd.concat([current, m.current.set_crs(crs)], axis=0).reset_index(
             drop=True
         )
 
@@ -33,16 +33,16 @@ def export_gdf(meas, overwrite):
         print(f"exporting\t{fp}")
         db = pd.DataFrame(db)
         if not os.path.exists(fp):
-            gpd.GeoDataFrame(geometry=[], data={id: []}, crs=3857).to_file(fp)
+            gpd.GeoDataFrame(geometry=[], data={id: []}, crs=crs).to_file(fp)
         if overwrite == "full":
-            master = gpd.GeoDataFrame(data={id: [None]}, crs=3857, geometry=[None])
+            master = gpd.GeoDataFrame(data={id: [None]}, crs=crs, geometry=[None])
         else:
             master = gpd.read_file(fp)
         master = pd.DataFrame(master)
         master = pd.concat([master, db], axis=0)
         master = master.drop_duplicates(subset=id, keep=keep).reset_index(drop=True)
         master = master.dropna(subset="geometry")
-        master = gpd.GeoDataFrame(master, geometry=master["geometry"], crs=3857)
+        master = gpd.GeoDataFrame(master, geometry=master["geometry"], crs=crs)
         master.to_file(fp, engine="pyogrio")
 
     # df = data.groupby("ID_line")["line_hdg_fwd"].agg("median")

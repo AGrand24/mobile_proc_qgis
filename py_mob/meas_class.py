@@ -14,7 +14,7 @@ from .proc import calc_compass
 from .line import get_line_data, get_pt_hdg, split_lines, get_lines, calc_line_pos
 
 from .colors import rgb_to_hex, get_default_crange
-from .sensors import sensors_load_from_db
+from .logger import logger_load_from_db
 from .gridding import kriging, mask_grid, export_surfer_grid
 from .plot import fig_traces, fig_format
 
@@ -22,13 +22,7 @@ from .plot import fig_traces, fig_format
 class Meas:
     def __init__(self, fp, **kwargs):
         self.fp_csv = fp
-        self.id_sensor_long = Path(self.fp_csv).name.split("_")[0]
-        self.id_sensor = sensors_load_from_db(self.id_sensor_long)
-        self.id = Path(self.fp_csv).name[:39]
-        self.id = self.id.replace(self.id_sensor_long, self.id_sensor)
-        self.id_datetime = Path(self.fp_csv).name[22:39]
-        self.overwrite_gpkg = kwargs.get("overwrite_gpkg", False)
-        self.Get_fps()
+        self.crs = kwargs.get("crs", 3857)
         print(self.fp_csv[4:])
 
     def __call__(self, **kwargs):
@@ -38,8 +32,23 @@ class Meas:
             df = self.data
         return pd.DataFrame(df)
 
+    def Get_logger_ids(self):
+        self.id_ser_num = self.data["ser_num"].iloc[0]
+        self.id_logger = logger_load_from_db(self.id_ser_num)
+
+        self.id_datetime = self.data["datetime"].dt.strftime("%Y-%m-%d_%H-%M").iloc[0]
+        self.id = f"{self.id_logger}_{self.id_datetime}"
+        self.data["ID"] = self.id + "_" + self.data["ID_point"].astype(str)
+        self.data["ID_area"] = self.id
+
+        print(self.id, self.id_logger, self.id_ser_num)
+
+        return self
+
     def Proc(self):
         self.Read_csv()
+        self.Get_fps()
+
         self.data = calc_compass(self.data)
         self.Get_meas_extents()
         self.Get_current()
@@ -63,8 +72,9 @@ class Meas:
         return self
 
     def Get_fps(self):
-        self.directory = f"output/{self.id_sensor}/{self.id_datetime}"
-        self.filename = f"{self.id_sensor}_{self.id_datetime}"
+        self.Get_logger_ids()
+        self.directory = f"output/{self.id_logger}/{self.id_datetime}"
+        self.filename = f"{self.id_logger}_{self.id_datetime}"
 
         if not os.path.exists(self.directory):
             os.makedirs(self.directory)
@@ -120,11 +130,9 @@ class Meas:
 
         geom = gpd.points_from_xy(df["lon"], df["lat"])
         gdf = gpd.GeoDataFrame(df, geometry=geom, crs=4326)
-        gdf = gdf.to_crs(3857)
+        gdf = gdf.to_crs(self.crs)
         gdf[["x", "y"]] = gdf.get_coordinates()
         gdf = gdf.replace("nan ", np.nan)
-        gdf["ID"] = self.id + "_" + gdf["ID_point"].astype(str)
-        gdf["ID_area"] = self.id
         gdf["voltage_raw"] = gdf["voltage_raw"].astype(float)
         self.data = gdf
         return self
@@ -202,8 +210,8 @@ class Meas:
         gdf = self.data[self.data["attribute"] == "meas"]
         gdf = gdf.dropna(subset="voltage_raw").reset_index(drop=True)
         geom = gpd.GeoSeries(MultiPoint(gdf["geometry"])).concave_hull(0.2).buffer(1)
-        data = data = {"ID_area": [self.id], "sensor": [self.id_sensor]}
-        self.extents = gpd.GeoDataFrame(data=data, geometry=geom, crs=3857)
+        data = data = {"ID_area": [self.id], "logger": [self.id_logger]}
+        self.extents = gpd.GeoDataFrame(data=data, geometry=geom, crs=self.crs)
         self.extents["start"] = gdf["datetime"].min()
         self.extents["end"] = gdf["datetime"].max()
         self.extents["fp"] = self.fp_csv
@@ -234,15 +242,17 @@ class Meas:
             meas = get_pt_hdg(self.data)
             meas = get_lines(meas)
             meas["ID_line"] = self.id + "_" + meas["line"].astype(str).str.zfill(3)
-            self.path = split_lines(meas)
+            self.path = split_lines(meas, self.crs)
             points = self.data.loc[self.data["attribute"] != "meas"]
             self.data = pd.concat([meas, points], axis=0, ignore_index=True)
             self.data = self.data.reset_index(drop=True)
 
         else:
-            self.path = gpd.GeoDataFrame(geometry=[], crs=3857)
+            self.path = gpd.GeoDataFrame(geometry=[], crs=self.crs)
         if len(self.path) > 0:
             self.data = get_line_data(self.data, self.path)
+        else:
+            self.data["line"] = np.nan
 
         return self
 
@@ -295,10 +305,10 @@ class Meas:
 
             geom = LineString(pt)
 
-            gdf = gpd.GeoDataFrame(geometry=[geom], crs=3857)
+            gdf = gpd.GeoDataFrame(geometry=[geom], crs=self.crs)
             gdf["ID_area"] = self.id
         else:
-            gdf = gpd.GeoDataFrame(geometry=[], columns=["ID_area"], crs=3857)
+            gdf = gpd.GeoDataFrame(geometry=[], columns=["ID_area"], crs=self.crs)
 
         self.current = gdf
         return self
@@ -411,7 +421,7 @@ class Meas:
         y = self.grid_y.flatten()
 
         geom = gpd.points_from_xy(x, y)
-        gs = gpd.GeoSeries(geom).set_crs(3857)
+        gs = gpd.GeoSeries(geom).set_crs(self.crs)
         gs = gs.to_crs(4326)
         coords = gs.get_coordinates()
         self.grid_x = np.reshape(coords["x"], self.grid_x.shape)
