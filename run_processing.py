@@ -27,6 +27,6 @@ if n > 0:
             traceback.print_exc()
             input("Press ENTER to continue!")
 
-export_gdf(meas, overwrite="full")
+export_gdf(meas, overwrite="full", crs=3857)
 
 input("\n\nProcessing finshed press ENTER to exit!")

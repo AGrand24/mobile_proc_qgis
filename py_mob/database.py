@@ -25,7 +25,7 @@ def export_gdf(meas, overwrite, crs):
             drop=True
         )
 
-    fps = [f"vector/{db}.gpkg" for db in ["data", "extents", "path", "current"]]
+    fps = [f"qfield/{db}.gpkg" for db in ["data", "extents", "path", "current"]]
     ids = ["ID", "ID_area", "ID_line", "ID_area"]
     dbs = [data, extents, path, current]
 
@@ -41,7 +41,7 @@ def export_gdf(meas, overwrite, crs):
         master = pd.DataFrame(master)
         master = pd.concat([master, db], axis=0)
         master = master.drop_duplicates(subset=id, keep=keep).reset_index(drop=True)
-        master = master.dropna(subset="geometry")
+        master = master.dropna(subset="x")
         master = gpd.GeoDataFrame(master, geometry=master["geometry"], crs=crs)
         master.to_file(fp, engine="pyogrio")
 

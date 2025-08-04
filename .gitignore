@@ -9,3 +9,7 @@
 *.ipynb
 *.gpkg
 /qfield_pak
+*qgs
+*qgs~
+*.zip
+/qfield/.qfieldsync
