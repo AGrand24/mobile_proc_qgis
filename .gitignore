@@ -13,3 +13,5 @@
 *qgs~
 *.zip
 /qfield/.qfieldsync
+/proc
+/doc
